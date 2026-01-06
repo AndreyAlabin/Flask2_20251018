@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields
 
 class AuthorSchema(Schema):
-    id = fields.Integer()
-    name = fields.String()
-    email = fields.Email()
+    id = fields.Integer(strict=True)
+    name = fields.String(required=True, error_messages={"required": "Please enter a name"})
+    surname = fields.String(required=False)
+    email = fields.Email(required=True, error_messages={"required": "Please enter a email"})
