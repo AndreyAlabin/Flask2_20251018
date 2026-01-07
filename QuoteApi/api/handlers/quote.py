@@ -6,7 +6,7 @@ from api.models.author import AuthorModel
 from marshmallow import ValidationError, EXCLUDE
 # from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError  # InvalidRequestError
-from . import check
+# from . import check
 from api.schemas.quote import quote_schema, quotes_schema, quotes_schema_without_author, change_quotes_schema, change_quotes_without_rating
 
 
