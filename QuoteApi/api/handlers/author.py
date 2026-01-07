@@ -10,7 +10,7 @@ from api.schemas.author import author_schema, authors_schema, change_author_sche
 
 @app.get("/authors")
 def get_authors():
-    """GET List of Authors"""
+    """GET List of Authors + """
     authors_db = db.session.scalars(db.select(AuthorModel)).all()
     # authors = [author.to_dict() for author in authors_db]
     # return jsonify(authors), 200
@@ -19,14 +19,14 @@ def get_authors():
 
 @app.get("/authors/<int:author_id>")
 def author_quotes(author_id: int):
-    """GET Author by ID """
+    """GET Author by ID + """
     author_db = db.get_or_404(AuthorModel, author_id, description=f'Author with id={author_id} not found')
     # return jsonify(author.to_dict()), HTTPStatus.OK
     return jsonify(author_schema.dump(author_db)), HTTPStatus.OK
 
 @app.post("/authors")
 def create_author():
-    """Create new Author"""
+    """Create new Author + """
     # data = request.json
     try:
         author_data = author_schema.loads(request.data)  # get_data() return raw bytes
@@ -38,43 +38,26 @@ def create_author():
     # except TypeError:
     #     abort(400, f"Invalid data. Required: <name>, <surname>. Received: {', '.join(data.keys())}.")
     except Exception as e:
-        abort(503, f"Database error: {str(e)}")
+        abort(HTTPStatus.SERVICE_UNAVAILABLE, f"Database error: {str(e)}")
     # return jsonify(author.to_dict()), 201
     return jsonify(author_schema.dump(author)), HTTPStatus.CREATED
 
-
-@app.post("/authors/<int:author_id>/quotes")
-def create_quote(author_id: int):
-    """Create new Quote by Author ID"""
-    author = db.get_or_404(entity=AuthorModel, ident=author_id, description=f"Author with id={author_id} not found")
-    data = request.json
-    try:
-        quote = QuoteModel(author, **data)
-        db.session.add(quote)
-        db.session.commit()
-    except TypeError:
-        abort(400, f"Invalid data. Required: <author>, <text>, <rating>. Received: {', '.join(data.keys())}.")
-    except Exception as e:
-        abort(503, f"Database error: {str(e)}")
-    return jsonify(quote.to_dict()), 201
-
-
 @app.delete("/authors/<int:author_id>")
 def delete_author(author_id):
-    """7. Authors / Delete Author by ID [Done]"""
+    """Delete Author by ID + """
     author = db.get_or_404(entity=AuthorModel, ident=author_id, description=f"Author with id={author_id} not found")
     db.session.delete(author)
     try:
         db.session.commit()
-        return jsonify({"message": f"Author with id {author_id} has deleted."}), 200
+        return jsonify({"message": f"Author with id {author_id} has deleted."}), HTTPStatus.OK
     except SQLAlchemyError as e:
         db.session.rollback()
-        abort(503, f"Database error: {str(e)}")
+        abort(HTTPStatus.SERVICE_UNAVAILABLE, f"Database error: {str(e)}")
 
 
 @app.put("/authors/<int:author_id>")
 def edit_author(author_id: int):
-    """Edit Author by ID"""
+    """Edit Author by ID + """
     # new_data = request.json
 
     try:
@@ -94,15 +77,7 @@ def edit_author(author_id: int):
             setattr(author, key_as_attr, value)
 
         db.session.commit()
-        return jsonify(author.to_dict()), 200
+        return jsonify(author_schema.dump(author)), HTTPStatus.OK
     except SQLAlchemyError as e:
         db.session.rollback()
-        abort(503, f"Database error: {str(e)}")
-
-
-@app.get("/authors/<int:author_id>/quotes")
-def get_quote_by_author_id(author_id: int):
-    """11. Quotes / GET List of Quotes by Author ID [Done]"""
-    quotes_db = db.session.scalars(db.select(QuoteModel).where(QuoteModel.author_id == author_id)).all()
-    quotes_list = [q.to_dict() for q in quotes_db]
-    return jsonify(quotes_list), 200
+        abort(HTTPStatus.SERVICE_UNAVAILABLE, f"Database error: {str(e)}")
