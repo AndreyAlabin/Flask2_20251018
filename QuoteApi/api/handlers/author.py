@@ -1,27 +1,31 @@
 from api import db, app
 from flask import request, abort, jsonify
+from http import HTTPStatus
 from api.models.author import AuthorModel
 from api.models.quote import QuoteModel
+from sqlalchemy.exc import SQLAlchemyError
+from api.schemas.author import author_schema, authors_schema
 
 
 @app.get("/authors")
 def get_authors():
-    '''1. Authors / GET List of Authors'''
+    """1. Authors / GET List of Authors"""
     authors_db = db.session.scalars(db.select(AuthorModel)).all()
-    authors = [author.to_dict() for author in authors_db]
-    return jsonify(authors), 200
+    # authors = [author.to_dict() for author in authors_db]
+    # return jsonify(authors), 200
+    return jsonify(authors_schema.dump(authors_db)), HTTPStatus.OK
 
 
 @app.get("/authors/<int:author_id>")
 def author_quotes(author_id: int):
-    '''3. Authors / GET Author by ID [Done]'''
+    """3. Authors / GET Author by ID [Done]"""
     author = db.get_or_404(AuthorModel, author_id, description=f'Author with id={author_id} not found')
     return jsonify(author.to_dict()), 200
 
 
 @app.post("/authors")
 def create_author():
-    '''5. Authors / Create new Author [Done]'''
+    """5. Authors / Create new Author [Done]"""
     data = request.json
     try:
         author = AuthorModel(**data)
@@ -36,7 +40,7 @@ def create_author():
 
 @app.post("/authors/<int:author_id>/quotes")
 def create_quote(author_id: int):
-    '''6. Quotes / Create new Quote by Author ID [Done]'''
+    """6. Quotes / Create new Quote by Author ID [Done]"""
     author = db.get_or_404(entity=AuthorModel, ident=author_id, description=f"Author with id={author_id} not found")
     data = request.json
     try:
@@ -52,7 +56,7 @@ def create_quote(author_id: int):
 
 @app.delete("/authors/<int:author_id>")
 def delete_author(author_id):
-    '''7. Authors / Delete Author by ID [Done]'''
+    """7. Authors / Delete Author by ID [Done]"""
     author = db.get_or_404(entity=AuthorModel, ident=author_id, description=f"Author with id={author_id} not found")
     db.session.delete(author)
     try:
@@ -65,7 +69,7 @@ def delete_author(author_id):
 
 @app.put("/authors/<int:author_id>")
 def edit_author(author_id: int):
-    '''9. Authors / Edit Author by ID [Done]'''
+    """9. Authors / Edit Author by ID [Done]"""
     new_data = request.json
 
     if not new_data:
@@ -88,7 +92,7 @@ def edit_author(author_id: int):
 
 @app.get("/authors/<int:author_id>/quotes")
 def get_quote_by_author_id(author_id: int):
-    '''11. Quotes / GET List of Quotes by Author ID [Done]'''
+    """11. Quotes / GET List of Quotes by Author ID [Done]"""
     quotes_db = db.session.scalars(db.select(QuoteModel).where(QuoteModel.author_id == author_id)).all()
     quotes_list = [q.to_dict() for q in quotes_db]
     return jsonify(quotes_list), 200
