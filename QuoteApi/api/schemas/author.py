@@ -1,3 +1,5 @@
+from functools import partial
+
 from api import ma
 from api.models.author import AuthorModel
 from marshmallow.validate import Length
@@ -15,3 +17,4 @@ class AuthorSchema(ma.SQLAlchemyAutoSchema):
 
 author_schema = AuthorSchema()
 authors_schema = AuthorSchema(many=True)
+change_author_schema = AuthorSchema(load_instance=False, partial=True)
