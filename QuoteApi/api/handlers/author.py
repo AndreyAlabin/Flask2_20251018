@@ -37,10 +37,12 @@ def create_author():
         abort(HTTPStatus.BAD_REQUEST, f'Validation error: {str(ve)}')
     # except TypeError:
     #     abort(400, f"Invalid data. Required: <name>, <surname>. Received: {', '.join(data.keys())}.")
-    except Exception as e:
+    except SQLAlchemyError as e:
+        db.session.rollback()
         abort(HTTPStatus.SERVICE_UNAVAILABLE, f"Database error: {str(e)}")
     # return jsonify(author.to_dict()), 201
     return jsonify(author_schema.dump(author)), HTTPStatus.CREATED
+
 
 @app.delete("/authors/<int:author_id>")
 def delete_author(author_id):
