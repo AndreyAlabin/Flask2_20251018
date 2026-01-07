@@ -3,13 +3,14 @@ from flask import request, abort, jsonify
 from http import HTTPStatus
 from api.models.author import AuthorModel
 from api.models.quote import QuoteModel
+from marshmallow import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from api.schemas.author import author_schema, authors_schema
 
 
 @app.get("/authors")
 def get_authors():
-    """1. Authors / GET List of Authors"""
+    """GET List of Authors"""
     authors_db = db.session.scalars(db.select(AuthorModel)).all()
     # authors = [author.to_dict() for author in authors_db]
     # return jsonify(authors), 200
@@ -18,24 +19,28 @@ def get_authors():
 
 @app.get("/authors/<int:author_id>")
 def author_quotes(author_id: int):
-    """3. Authors / GET Author by ID [Done]"""
-    author = db.get_or_404(AuthorModel, author_id, description=f'Author with id={author_id} not found')
-    return jsonify(author.to_dict()), 200
-
+    """GET Author by ID """
+    author_db = db.get_or_404(AuthorModel, author_id, description=f'Author with id={author_id} not found')
+    # return jsonify(author.to_dict()), HTTPStatus.OK
+    return jsonify(author_schema.dump(author_db)), HTTPStatus.OK
 
 @app.post("/authors")
 def create_author():
     """5. Authors / Create new Author [Done]"""
-    data = request.json
+    # data = request.json
     try:
-        author = AuthorModel(**data)
+        author_data = author_schema.loads(request.data)  # get_data() return raw bytes
+        author = AuthorModel(**author_data)
         db.session.add(author)
         db.session.commit()
-    except TypeError:
-        abort(400, f"Invalid data. Required: <name>, <surname>. Received: {', '.join(data.keys())}.")
+    except ValidationError as ve:
+        abort(HTTPStatus.BAD_REQUEST, f'Validation error: {str(ve)}')
+    # except TypeError:
+    #     abort(400, f"Invalid data. Required: <name>, <surname>. Received: {', '.join(data.keys())}.")
     except Exception as e:
         abort(503, f"Database error: {str(e)}")
-    return jsonify(author.to_dict()), 201
+    # return jsonify(author.to_dict()), 201
+    return jsonify(author_schema.dump(author)), HTTPStatus.CREATED
 
 
 @app.post("/authors/<int:author_id>/quotes")
