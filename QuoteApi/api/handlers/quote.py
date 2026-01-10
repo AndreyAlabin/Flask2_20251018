@@ -99,6 +99,8 @@ def edit_quote(quote_id: int):
         abort(HTTPStatus.SERVICE_UNAVAILABLE, f"Database error: {str(e)}")
 
 
+# TODO: Разобраться до конца со сложными подзапросами через ORM без залезания в команды из core SQLAlchemy
+#  (описание кейса с пока временным решением, но которое отрабатывает любой набор параметров, далее во многострочном комменте)
 """"
 @app.route("/quotes/filter", methods=["GET"])
 def filter_quotes():
@@ -111,7 +113,7 @@ def filter_quotes():
     return jsonify((quotes_schema.dump(quotes))), HTTPStatus.OK
 
 
-Этот код не рабочий, когда нужны подзапросы в модель автора по name или surname через модель цитат
+Этот код не сработал, например, когда потребовался подзапрос через модель цитат в модель автора одновременно по name и surname 
 
 Пример запроса: /quotes/filter?rating=4&author=Belov
 Выдаёт ошибку: "400 Bad Request: Error: Mapped instance expected for relationship comparison to object. 
@@ -127,9 +129,6 @@ for comparison with a subquery, use QuoteModel.author.has(**criteria).""
 TypeError: Select.filter_by() takes 1 positional argument but 2 were given
 """
 
-# В итоге задачу запроса из базы пока решил по-другому, он отрабатывает любой набор параметров,
-# а со сложными подзапросами SQLAlchemy-ma буду ещё разбираться.
-# Вывод результата сделал с использованием ma
 @app.get("/quotes/filter")
 def filter_quote():
     data = request.args
